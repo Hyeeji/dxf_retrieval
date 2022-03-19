@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from cairosvg import svg2png
+import xml.etree.ElementTree as ET
 
 
 def svg_to_png(src, dest, width, height):
@@ -9,6 +10,21 @@ def svg_to_png(src, dest, width, height):
             , write_to=dest
             , parent_width=width
             , parent_height=height)
+
+
+def make_front_svg(svg_path):
+    ET.register_namespace('', "http://www.w3.org/2000/svg")  # should add namespace
+    tree = ET.parse(svg_path)
+    root = tree.getroot()
+
+    for first_level in root.getchildren():
+        for second_level in first_level.getchildren():
+            items = second_level.items()[0]
+            tag_name = items[1]
+            if "B" in tag_name:
+                first_level.remove(second_level)
+
+    tree.write(svg_path)
 
 
 if __name__ == '__main__':
@@ -31,6 +47,8 @@ if __name__ == '__main__':
                 file = os.listdir(str(sub_dir))
                 for svg in file:
                     src_svg = str(sub_dir)+'\\'+svg
+
+                    make_front_svg(src_svg)
 
                     dest_png = str(png_path)+'\\'+svg
                     dest_png = dest_png.replace('.svg', '.png')
