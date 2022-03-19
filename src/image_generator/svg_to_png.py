@@ -12,19 +12,21 @@ def svg_to_png(src, dest, width, height):
             , parent_height=height)
 
 
-def make_front_svg(svg_path):
+def remove_back_svg(svg_path):
     ET.register_namespace('', "http://www.w3.org/2000/svg")  # should add namespace
     tree = ET.parse(svg_path)
     root = tree.getroot()
 
-    for first_level in root.getchildren():
-        for second_level in first_level.getchildren():
+    for first_level in list(root):
+        for second_level in list(first_level):
             items = second_level.items()[0]
             tag_name = items[1]
             if "B" in tag_name:
                 first_level.remove(second_level)
 
-    tree.write(svg_path)
+    tree.write(src_svg)
+
+
 
 
 if __name__ == '__main__':
@@ -48,7 +50,7 @@ if __name__ == '__main__':
                 for svg in file:
                     src_svg = str(sub_dir)+'\\'+svg
 
-                    make_front_svg(src_svg)
+                    remove_back_svg(src_svg)
 
                     dest_png = str(png_path)+'\\'+svg
                     dest_png = dest_png.replace('.svg', '.png')
