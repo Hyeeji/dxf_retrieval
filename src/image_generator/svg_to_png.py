@@ -46,9 +46,8 @@ def resize_svg(svg_path):
     tree.write(svg_path)
 
 
-def resize_png(png_path):
-
-    img = cv2.imread(png_path, cv2.IMREAD_UNCHANGED)
+def resize_png(src_path):
+    img = cv2.imread(src_path, cv2.IMREAD_UNCHANGED)
 
     bw_img = (img[:, :, 3] > 0)  # alhpa != 0
 
@@ -58,8 +57,6 @@ def resize_png(png_path):
     current_w = 0
 
     points = []
-
-    first = True
 
     while current_w < img_width:
         row_arr = bw_img[current_w, :]
@@ -74,21 +71,39 @@ def resize_png(png_path):
                 last_point = current_w
             continue
 
-        if first:
-            first = False
-            points.append(current_w)
-
         # for every width_stride column
         current_w += 1
         last_point = current_w
 
-    points.append(last_point)
-    
-    print(points)
+        points.append((current_w, np.min(positive_indices), np.max(positive_indices)))
+
+    row_points = []
+    min_column_points = []
+    max_column_points = []
+
+    for point in points:
+        row_points.append(point[0])
+        min_column_points.append(point[1])
+        max_column_points.append(point[2])
+
+    min_row = np.min(row_points)
+    max_row = np.max(row_points)
+    min_column = np.min(min_column_points)
+    max_column = np.max(max_column_points)
+
+    crop_img = img[min_row:max_row, min_column:max_column]
+
+    image = cv2.resize(crop_img, dsize=(width, height))
+
+    src_path = src_path.split('.png')
+
+    src_path = src_path[0] + "_original.png"
+
+    cv2.imwrite(src_path, crop_img)
 
 
 if __name__ == '__main__':
-    DATA_ROOT = 'D:/sketch-pattern_dataset/sketch'
+    DATA_ROOT = 'D:/sketch-pattern_dataset/test'
 
     png_path = Path(DATA_ROOT, '_PNG_FOLDER_')
     png_path.mkdir(parents=True, exist_ok=True)
